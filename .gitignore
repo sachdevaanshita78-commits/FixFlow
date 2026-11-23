@@ -1,0 +1,38 @@
+# Python
+__pycache__/
+*.py[cod]
+venv/
+.venv/
+myenv/
+.pytest_cache/
+
+
+# Environment variables
+.env
+.env.*
+!.env.example
+
+# Node.js
+node_modules/
+dist/
+build/
+
+# IDE
+.idea/
+.vscode/
+
+# Logs
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Local ML datasets
+datasets/*.csv
+datasets/*.parquet
+
+# Nested Python virtual environments
+**/.venv/
+**/venv/
+backend/.venv/
