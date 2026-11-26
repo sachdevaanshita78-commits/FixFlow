@@ -95,6 +95,35 @@ function statusClass(status) {
     .replace(/[^a-z0-9]+/g, "-");
 }
 
+// Turns values like "ACCOUNT_ACCESS" or "pending_agent" into "Account Access".
+function formatLabel(value) {
+  if (value === null || value === undefined || value === "") return "—";
+
+  return String(value)
+    .replaceAll("_", " ")
+    .toLowerCase()
+    .replace(/\b\w/g, (char) => char.toUpperCase());
+}
+
+// Builds { employeeId: "Name" } so tickets can show who they are assigned to.
+function buildEmployeeNames(employees) {
+  const names = {};
+
+  for (const employee of employees) {
+    if (employee?.id) {
+      names[String(employee.id)] = employee.full_name || employee.email;
+    }
+  }
+
+  return names;
+}
+
+function getAssigneeName(ticket, employeeNames) {
+  if (!ticket?.assigned_to_id) return "Unassigned";
+
+  return employeeNames[String(ticket.assigned_to_id)] || "Unknown employee";
+}
+
 function getTicketId(ticket) {
   return ticket?.id ?? ticket?.ticket_id;
 }
@@ -161,6 +190,11 @@ function TicketTable({
   canDelete = false,
   onDelete,
   deletingId,
+  canUpdateStatus = false,
+  onStatusChange,
+  updatingStatusId,
+  showAssignee = false,
+  employeeNames = {},
 }) {
   if (!tickets.length) {
     return <EmptyState>No tickets found for this workspace.</EmptyState>;
@@ -175,6 +209,9 @@ function TicketTable({
             <th>Title</th>
             <th>Status</th>
             <th>Priority</th>
+            <th>Category</th>
+            <th>Sentiment</th>
+            {showAssignee && <th>Assigned to</th>}
             <th>Created</th>
             <th>Details</th>
             {canDelete && <th>Actions</th>}
@@ -192,15 +229,60 @@ function TicketTable({
                 <td>#{String(id ?? "—").slice(0, 8)}</td>
                 <td>{ticket.title || ticket.subject || "Untitled ticket"}</td>
                 <td>
-                  <span
-                    className={`fx-status fx-status-${statusClass(
-                      ticket.status
-                    )}`}
-                  >
-                    {ticket.status || "Unknown"}
-                  </span>
+                  {canUpdateStatus ? (
+                    <select
+                      className="fx-status-select"
+                      value={ticket.status || "open"}
+                      disabled={String(updatingStatusId) === String(id)}
+                      aria-label={`Update status for ticket ${id}`}
+                      onChange={(event) =>
+                        onStatusChange?.(ticket, event.target.value)
+                      }
+                    >
+                      {!["open", "in_progress", "resolved"].includes(
+                        ticket.status
+                      ) && (
+                        <option value={ticket.status} disabled>
+                          {formatLabel(ticket.status)}
+                        </option>
+                      )}
+                      <option value="open">Open</option>
+                      <option value="in_progress">In progress</option>
+                      <option value="resolved">Resolved</option>
+                    </select>
+                  ) : (
+                    <span
+                      className={`fx-status fx-status-${statusClass(
+                        ticket.status
+                      )}`}
+                    >
+                      {ticket.status || "Unknown"}
+                    </span>
+                  )}
+                  {String(updatingStatusId) === String(id) && (
+                    <small className="fx-muted">Saving…</small>
+                  )}
                 </td>
                 <td>{ticket.priority || "Normal"}</td>
+                <td>{formatLabel(ticket.category)}</td>
+                <td>
+                  <span
+                    className={`fx-status fx-sentiment-${statusClass(
+                      ticket.sentiment
+                    )}`}
+                  >
+                    {formatLabel(ticket.sentiment)}
+                  </span>
+                </td>
+                {showAssignee && (
+                  <td>
+                    {ticket.assigned_to_id ? (
+                      getAssigneeName(ticket, employeeNames)
+                    ) : (
+                      <span className="fx-muted">Unassigned</span>
+                    )}
+                  </td>
+                )}
                 <td>{formatDate(ticket.created_at)}</td>
                 <td>
                   <button
@@ -245,6 +327,8 @@ function TicketDetails({
   aiQuestion,
   setAiQuestion,
   onGenerateAnswer,
+  showAssignee = false,
+  assigneeName = "Unassigned",
 }) {
   if (!ticket) {
     return (
@@ -304,6 +388,20 @@ function TicketDetails({
           <span className="fx-detail-label">Priority</span>
           <p>{ticket.priority || "Normal"}</p>
         </div>
+        <div>
+          <span className="fx-detail-label">Category</span>
+          <p>{formatLabel(ticket.category)}</p>
+        </div>
+        <div>
+          <span className="fx-detail-label">Sentiment</span>
+          <p>{formatLabel(ticket.sentiment)}</p>
+        </div>
+        {showAssignee && (
+          <div>
+            <span className="fx-detail-label">Assigned to</span>
+            <p>{assigneeName}</p>
+          </div>
+        )}
         <div>
           <span className="fx-detail-label">Created</span>
           <p>{formatDate(ticket.created_at)}</p>
@@ -734,6 +832,7 @@ export default function Dashboard({ onNavigate }) {
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
   const [deletingId, setDeletingId] = useState(null);
+  const [updatingStatusId, setUpdatingStatusId] = useState(null);
   const [deletingCompanyId, setDeletingCompanyId] = useState(null);
   const [deletingInvitationId, setDeletingInvitationId] = useState(null);
 
@@ -824,6 +923,17 @@ export default function Dashboard({ onNavigate }) {
         const ticketData = await apiRequest("/tickets");
         setTickets(getList(ticketData, ["tickets"]));
         setCompanies([]);
+
+        // Admins see who each ticket is assigned to. A failure here must not
+        // break the dashboard, so tickets just show "Unknown employee".
+        if (currentUser.role === "admin") {
+          try {
+            const employeeData = await apiRequest("/tenants/users");
+            setEmployees(getList(employeeData, ["users", "employees"]));
+          } catch {
+            setEmployees([]);
+          }
+        }
       }
     } catch (err) {
       setError(err.message || "Unable to load dashboard.");
@@ -1065,6 +1175,70 @@ export default function Dashboard({ onNavigate }) {
     }
   }
 
+  async function handleTicketStatusChange(ticket, nextStatus) {
+    if (role !== "agent") {
+      setError("Only assigned agents can update ticket progress here.");
+      return;
+    }
+
+    const id = getTicketId(ticket);
+    if (id == null) {
+      setError("This ticket has no ID.");
+      return;
+    }
+
+    const previousStatus = ticket.status;
+    setUpdatingStatusId(id);
+    setError("");
+    setNotice("");
+
+    setTickets((current) =>
+      current.map((item) =>
+        String(getTicketId(item)) === String(id)
+          ? { ...item, status: nextStatus }
+          : item
+      )
+    );
+
+    try {
+      const updated = await apiRequest(`/tickets/${encodeURIComponent(id)}`, {
+        method: "PATCH",
+        body: JSON.stringify({ status: nextStatus }),
+      });
+
+      const savedTicket = updated.ticket || updated;
+      setTickets((current) =>
+        current.map((item) =>
+          String(getTicketId(item)) === String(id)
+            ? { ...item, ...savedTicket }
+            : item
+        )
+      );
+      setSelectedTicket((current) =>
+        current && String(getTicketId(current)) === String(id)
+          ? { ...current, ...savedTicket }
+          : current
+      );
+      setNotice(`Ticket status updated to ${nextStatus.replaceAll("_", " ")}.`);
+    } catch (err) {
+      setTickets((current) =>
+        current.map((item) =>
+          String(getTicketId(item)) === String(id)
+            ? { ...item, status: previousStatus }
+            : item
+        )
+      );
+      setSelectedTicket((current) =>
+        current && String(getTicketId(current)) === String(id)
+          ? { ...current, status: previousStatus }
+          : current
+      );
+      setError(err.message || "Unable to update ticket status.");
+    } finally {
+      setUpdatingStatusId(null);
+    }
+  }
+
   async function handleGenerateAnswer(ticket) {
     if (!ticket) return;
 
@@ -1161,6 +1335,9 @@ export default function Dashboard({ onNavigate }) {
 
   if (!roleDetails) return null;
 
+  const employeeNames = buildEmployeeNames(employees);
+  const showAssignee = role === "admin";
+
   const openCount = tickets.filter(
     (ticket) =>
       !["closed", "resolved"].includes(
@@ -1168,8 +1345,11 @@ export default function Dashboard({ onNavigate }) {
       )
   ).length;
 
-  const urgentCount = tickets.filter(
-    (ticket) => String(ticket.priority || "").toLowerCase() === "urgent"
+  // Backend priorities include "Critical", so count both urgent and critical.
+  const urgentCount = tickets.filter((ticket) =>
+    ["urgent", "critical"].includes(
+      String(ticket.priority || "").toLowerCase()
+    )
   ).length;
 
   return (
@@ -1414,7 +1594,7 @@ export default function Dashboard({ onNavigate }) {
                     <StatCard
                       label="Urgent tickets"
                       value={urgentCount}
-                      description="Tickets with urgent priority"
+                      description="Tickets with urgent or critical priority"
                     />
                   </>
                 )}
@@ -1525,11 +1705,16 @@ export default function Dashboard({ onNavigate }) {
 
                   <TicketTable
                     tickets={tickets.slice(0, 5)}
+                    showAssignee={showAssignee}
+                    employeeNames={employeeNames}
                     selectedId={getTicketId(selectedTicket)}
                     onSelect={selectTicket}
                     canDelete={canDelete}
                     onDelete={handleDeleteTicket}
                     deletingId={deletingId}
+                    canUpdateStatus={role === "agent"}
+                    onStatusChange={handleTicketStatusChange}
+                    updatingStatusId={updatingStatusId}
                   />
                 </section>
               )}
@@ -1612,11 +1797,16 @@ export default function Dashboard({ onNavigate }) {
 
                 <TicketTable
                   tickets={tickets}
+                  showAssignee={showAssignee}
+                  employeeNames={employeeNames}
                   selectedId={getTicketId(selectedTicket)}
                   onSelect={selectTicket}
                   canDelete={canDelete}
                   onDelete={handleDeleteTicket}
                   deletingId={deletingId}
+                  canUpdateStatus={role === "agent"}
+                  onStatusChange={handleTicketStatusChange}
+                  updatingStatusId={updatingStatusId}
                 />
               </section>
 
@@ -1636,6 +1826,8 @@ export default function Dashboard({ onNavigate }) {
                 aiQuestion={aiQuestion}
                 setAiQuestion={setAiQuestion}
                 onGenerateAnswer={handleGenerateAnswer}
+                showAssignee={showAssignee}
+                assigneeName={getAssigneeName(selectedTicket, employeeNames)}
               />
             </>
           )}
@@ -1680,6 +1872,7 @@ export default function Dashboard({ onNavigate }) {
                         <th>Name</th>
                         <th>Email</th>
                         <th>Role</th>
+                        <th>Categories</th>
                         <th>Joined</th>
                       </tr>
                     </thead>
@@ -1692,6 +1885,14 @@ export default function Dashboard({ onNavigate }) {
                             <span className="fx-status">
                               {employee.role || "agent"}
                             </span>
+                          </td>
+                          <td>
+                            {Array.isArray(employee.supported_categories) &&
+                            employee.supported_categories.length > 0
+                              ? employee.supported_categories
+                                  .map(formatLabel)
+                                  .join(", ")
+                              : "—"}
                           </td>
                           <td>{formatDate(employee.created_at)}</td>
                         </tr>

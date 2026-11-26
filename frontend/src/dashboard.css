@@ -1186,3 +1186,104 @@
     transition-duration: 0.01ms !important;
   }
 }
+
+.fx-sentiment {
+  display: inline-block;
+  padding: 5px 10px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: capitalize;
+  white-space: nowrap;
+}
+
+.fx-sentiment-positive {
+  color: #15803d;
+  background: #dcfce7;
+}
+
+.fx-sentiment-negative {
+  color: #b91c1c;
+  background: #fee2e2;
+}
+
+.fx-sentiment-neutral {
+  color: #1d4ed8;
+  background: #dbeafe;
+}
+
+.fx-sentiment-unknown {
+  color: #64748b;
+  background: #f1f5f9;
+}
+
+/* ===== Add to dashboard.css ===== */
+
+/* Sentiment badges (reuse the base .fx-status look) */
+.fx-sentiment-positive {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.fx-sentiment-neutral {
+  background: #e2e8f0;
+  color: #334155;
+}
+
+.fx-sentiment-negative {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.fx-sentiment-unknown {
+  background: transparent;
+  color: #64748b;
+}
+
+
+/* ===== Add to App.css ===== */
+
+/* Category picker on the accept-invitation page */
+.category-picker-group {
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 14px 16px;
+  margin: 8px 0 16px;
+}
+
+.category-picker-group legend {
+  font-weight: 600;
+  padding: 0 6px;
+}
+
+.category-picker-hint {
+  margin: 0 0 12px;
+  font-size: 0.85rem;
+  color: #64748b;
+}
+
+.category-picker {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+  gap: 8px;
+}
+
+.category-option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.category-option:hover {
+  background: #f8fafc;
+}
+
+.category-option input {
+  width: auto;
+  margin: 0;
+}

@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import "./App.css";
 import Dashboard from "./Dashboard";
@@ -1364,9 +1363,32 @@ function LoginPage() {
   );
 }
 
+// Must match the allowed categories in InvitationAccept (schemas.py).
+const CATEGORY_OPTIONS = [
+  "BANKING",
+  "CARDS",
+  "DIGITAL_BANKING",
+  "TRANSFERS",
+  "LOANS",
+  "FRAUD",
+  "DEPOSITS",
+  "COMPLIANCE",
+  "TECHNICAL",
+  "ACCOUNT_ACCESS",
+  "BILLING",
+  "REFUNDS",
+  "SERVICE_REQUEST",
+  "PRODUCT",
+  "DOCUMENTATION",
+  "NETWORK",
+  "HARDWARE",
+  "OTHER",
+];
+
 function AcceptInvitationPage() {
   const [fullName, setFullName] = useState("");
   const [password, setPassword] = useState("");
+  const [categories, setCategories] = useState([]);
   const [message, setMessage] = useState("");
   const [messageType, setMessageType] = useState("error");
   const [loading, setLoading] = useState(false);
@@ -1382,6 +1404,14 @@ function AcceptInvitationPage() {
     document.title = "Accept invitation — FixFlow";
   }, []);
 
+  function toggleCategory(category) {
+    setCategories((current) =>
+      current.includes(category)
+        ? current.filter((item) => item !== category)
+        : [...current, category]
+    );
+  }
+
   async function handleSubmit(event) {
     event.preventDefault();
     setMessage("");
@@ -1389,6 +1419,12 @@ function AcceptInvitationPage() {
     if (!passwordValid) {
       setMessageType("error");
       setMessage("Please meet all password requirements before continuing.");
+      return;
+    }
+
+    if (categories.length === 0) {
+      setMessageType("error");
+      setMessage("Select at least one category you can support.");
       return;
     }
 
@@ -1402,6 +1438,7 @@ function AcceptInvitationPage() {
           token,
           full_name: fullName.trim(),
           password,
+          categories,
         }),
       });
 
@@ -1488,10 +1525,31 @@ function AcceptInvitationPage() {
             <PasswordRequirements password={password} />
           </div>
 
+          <fieldset className="category-picker-group">
+            <legend>Categories you support</legend>
+            <p className="category-picker-hint">
+              Select at least one. Tickets in these categories can be
+              assigned to you.
+            </p>
+
+            <div className="category-picker">
+              {CATEGORY_OPTIONS.map((category) => (
+                <label key={category} className="category-option">
+                  <input
+                    type="checkbox"
+                    checked={categories.includes(category)}
+                    onChange={() => toggleCategory(category)}
+                  />
+                  <span>{category.replaceAll("_", " ")}</span>
+                </label>
+              ))}
+            </div>
+          </fieldset>
+
           <button
             className="button primary-button auth-submit"
             type="submit"
-            disabled={loading || !passwordValid}
+            disabled={loading || !passwordValid || categories.length === 0}
           >
             {loading ? "Accepting invitation..." : "Accept invitation"}
             {!loading && <span>↗</span>}

@@ -3,7 +3,7 @@ import re
 from datetime import datetime
 from typing import Optional
 
-from pydantic import BaseModel, ConfigDict, Field, EmailStr, field_validator
+from pydantic import BaseModel, ConfigDict, Field, EmailStr, field_validator, computed_field
 from sqlalchemy import select, func
 
 from models import TicketStatus
@@ -51,10 +51,10 @@ class TicketOut(BaseModel):
     reply: Optional[str] = None
     category: Optional[str] = None
     priority: Optional[str] = None
+    assigned_to_id: Optional[uuid.UUID] = None  # NEW
+    sentiment: Optional[str] = None
     created_at: datetime
     updated_at: datetime
-
-
 class TicketIntakeOut(TicketOut):
     pass
 
@@ -84,13 +84,17 @@ class TokenResponse(BaseModel):
     token_type: str = "bearer"
 
 
+
 class UserOut(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     id: uuid.UUID
-    tenant_id: uuid.UUID
+    tenant_id: Optional[uuid.UUID] = None
     email: str
     role: str
+    full_name: str
+    supported_categories: list[str] = Field(default_factory=list)
+
 
 class OrganizationRegister(BaseModel):
     company_name: str = Field(min_length=2, max_length=120)
@@ -108,15 +112,54 @@ class InvitationCreate(BaseModel):
     full_name: str = Field(min_length=2, max_length=120)
 
 
+
 class InvitationAccept(BaseModel):
     token: str
     full_name: str = Field(min_length=2, max_length=120)
     password: str = Field(min_length=12, max_length=128)
+    categories: list[str] = Field(min_length=1)
 
     @field_validator("password")
     @classmethod
     def check_password(cls, password: str) -> str:
         return validate_password_rules(password)
+
+    @field_validator("categories")
+    @classmethod
+    def validate_categories(cls, categories: list[str]) -> list[str]:
+        allowed_categories = {
+            "BANKING",
+            "CARDS",
+            "DIGITAL_BANKING",
+            "TRANSFERS",
+            "LOANS",
+            "FRAUD",
+            "DEPOSITS",
+            "COMPLIANCE",
+            "TECHNICAL",
+            "ACCOUNT_ACCESS",
+            "BILLING",
+            "REFUNDS",
+            "SERVICE_REQUEST",
+            "PRODUCT",
+            "DOCUMENTATION",
+            "NETWORK",
+            "HARDWARE",
+            "OTHER",
+        }
+
+        if len(categories) != len(set(categories)):
+            raise ValueError("Duplicate categories are not allowed.")
+
+        invalid_categories = set(categories) - allowed_categories
+
+        if invalid_categories:
+            raise ValueError(
+                f"Invalid categories: {', '.join(sorted(invalid_categories))}"
+            )
+
+        return categories
+
 
 class AIAnswerOut(BaseModel):
     answer: str

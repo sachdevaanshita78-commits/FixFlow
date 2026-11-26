@@ -1,0 +1,32 @@
+{
+    "model_name": "FixFlow Banking Sentiment Classifier",
+    "model_type": "TF-IDF + Logistic Regression",
+    "labels": [
+        "negative",
+        "neutral",
+        "positive"
+    ],
+    "training_rows": 120,
+    "language_counts": {
+        "en": 60,
+        "hinglish": 60
+    },
+    "sentiment_counts": {
+        "positive": 40,
+        "negative": 40,
+        "neutral": 40
+    },
+    "best_parameters": {
+        "tfidf__analyzer": "char_wb",
+        "tfidf__min_df": 1,
+        "tfidf__ngram_range": [
+            2,
+            5
+        ]
+    },
+    "cross_validation_macro_f1": 0.7987434787434787,
+    "test_accuracy_before_final_refit": 0.9444444444444444,
+    "test_macro_f1_before_final_refit": 0.9440559440559441,
+    "random_state": 42,
+    "notes": "Small synthetic banking dataset; predictions require ongoing review and real-world validation."
+}

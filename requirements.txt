@@ -23,3 +23,5 @@ sentence-transformers
 groq
 pymupdf
 python-docx
+scikit-learn==1.6.1
+joblib==1.6.0

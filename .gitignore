@@ -36,3 +36,7 @@ datasets/*.parquet
 **/.venv/
 **/venv/
 backend/.venv/
+
+# Old datasets and archives
+datasets/old_files_archive/
+backend_files.zip
