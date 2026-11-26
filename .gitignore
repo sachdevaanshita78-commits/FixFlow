@@ -29,7 +29,6 @@ build/
 Thumbs.db
 
 # Local ML datasets
-datasets/*.csv
 datasets/*.parquet
 
 # Nested Python virtual environments

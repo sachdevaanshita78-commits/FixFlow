@@ -1,0 +1,61 @@
+text,category
+I am unable to upload the required document.,DOCUMENTATION
+The portal rejects my PDF file.,DOCUMENTATION
+The attachment is missing from my support request.,DOCUMENTATION
+I keep getting an invalid file format error.,DOCUMENTATION
+Where can I find the required documents for verification?,DOCUMENTATION
+The uploaded document is not opening.,DOCUMENTATION
+The system says my file is corrupted.,DOCUMENTATION
+I cannot attach supporting documents to the request.,DOCUMENTATION
+The document upload keeps failing.,DOCUMENTATION
+Please tell me which documents are required.,DOCUMENTATION
+I forgot my password and cannot access my account.,ACCOUNT_ACCESS
+My account is locked after several login attempts.,ACCOUNT_ACCESS
+I am unable to sign in to the customer portal.,ACCOUNT_ACCESS
+Please help me reset my account password.,ACCOUNT_ACCESS
+The verification code for login is not arriving.,ACCOUNT_ACCESS
+My authentication code keeps getting rejected.,ACCOUNT_ACCESS
+I need to update my account login credentials.,ACCOUNT_ACCESS
+I cannot access my profile after changing my password.,ACCOUNT_ACCESS
+Two-factor authentication is not working for my account.,ACCOUNT_ACCESS
+Please unlock my account so I can sign in.,ACCOUNT_ACCESS
+The system says my username or password is incorrect.,ACCOUNT_ACCESS
+I no longer have access to my registered authentication device.,ACCOUNT_ACCESS
+My login session keeps expiring immediately.,ACCOUNT_ACCESS
+How can I change my account password?,ACCOUNT_ACCESS
+I am unable to complete the account verification login step.,ACCOUNT_ACCESS
+The internet connection keeps disconnecting.,NETWORK
+I cannot connect to the office Wi-Fi.,NETWORK
+The network is extremely slow today.,NETWORK
+The application times out because of connectivity issues.,NETWORK
+I keep losing connection to the company network.,NETWORK
+The VPN connection is not establishing.,NETWORK
+Websites are not loading on the office network.,NETWORK
+The network connection drops during file transfers.,NETWORK
+I am getting a DNS resolution error.,NETWORK
+The internet is unavailable on my workstation.,NETWORK
+Please create a new employee account.,SERVICE_REQUEST
+I need access to a shared company folder.,SERVICE_REQUEST
+Please remove my access to the old project folder.,SERVICE_REQUEST
+I would like to request installation of approved software.,SERVICE_REQUEST
+Please add me to the department mailing group.,SERVICE_REQUEST
+I need permission to access the reporting tool.,SERVICE_REQUEST
+Please create a shared mailbox for our team.,SERVICE_REQUEST
+I want to request a change to my employee profile.,SERVICE_REQUEST
+Please arrange access to the new project workspace.,SERVICE_REQUEST
+Kindly deactivate the account of a former employee.,SERVICE_REQUEST
+I need a new distribution list for my department.,SERVICE_REQUEST
+Please grant temporary access to the finance folder.,SERVICE_REQUEST
+I would like to request a software license.,SERVICE_REQUEST
+Please update the permissions for our team folder.,SERVICE_REQUEST
+Can you arrange a new workstation for a new employee?,SERVICE_REQUEST
+I need a copy of my bank statement,DOCUMENTATION
+Please send me my latest bank statement,DOCUMENTATION
+I want to download my account statement,DOCUMENTATION
+How can I get my transaction statement,DOCUMENTATION
+Please provide my bank statement for the last six months,DOCUMENTATION
+I need an account statement for loan documentation,DOCUMENTATION
+Where can I find my monthly bank statement,DOCUMENTATION
+Please email me my account statement,DOCUMENTATION
+I need a PDF copy of my bank statement,DOCUMENTATION
+How do I request an account statement,DOCUMENTATION
