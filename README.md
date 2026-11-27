@@ -216,6 +216,8 @@ The Aurora ticket intake workflow also uses classification, response generation,
 ### 1. Category Classification
 
 FixFlow uses a trained classification model to identify the type of customer issue.
+- TF-IDF-based classification.
+- MiniLM-based classification.
 
 The category classifier currently supports 18 categories:
 
@@ -249,7 +251,7 @@ FixFlow uses a hybrid priority prediction approach.
 The priority service combines:
 
 - TF-IDF-based classification.
-- MiniLM-based classification.
+- Logistic-based classification.
 - Probability averaging between the two prediction outputs.
 - Configurable critical-pattern rules.
 
